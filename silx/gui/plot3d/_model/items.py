@@ -544,7 +544,7 @@ class InterpolationRow(ProxyRow):
             editorHint=modes)
 
 
-class _ColormapBaseRowMixIn(qt.QObject):
+class _ColormapBaseRowMixIn(object):
     """Mixin class for colormap model row
 
     This class handle synchronization and signals from the item and the colormap
@@ -557,8 +557,6 @@ class _ColormapBaseRowMixIn(qt.QObject):
         self._dataRange = None
         self._item = weakref.ref(item)
         self._colormap = item.getColormap()
-
-        qt.QObject.__init__(self)
 
         self._colormap.sigChanged.connect(self._colormapChanged)
         item.sigItemChanged.connect(self._itemChanged)
@@ -620,7 +618,7 @@ class _ColormapBaseRowMixIn(qt.QObject):
             self._sigColormapChanged.emit()
 
 
-class _ColormapBoundRow(_ColormapBaseRowMixIn, ProxyRow):
+class _ColormapBoundRow(ProxyRow, _ColormapBaseRowMixIn):
     """ProxyRow for colormap min or max
 
     :param ColormapMixIn item: The item to handle
@@ -630,12 +628,15 @@ class _ColormapBoundRow(_ColormapBaseRowMixIn, ProxyRow):
 
     def __init__(self, item, name, index):
         self._index = index
-        _ColormapBaseRowMixIn.__init__(self, item)
+        old = self.flags
+        self.flags = lambda c: 0
         ProxyRow.__init__(
             self,
             name=name,
             fget=self._getBound,
             fset=self._setBound)
+        self.flags = old
+        _ColormapBaseRowMixIn.__init__(self, item)
 
         self.setToolTip('Colormap %s bound:\n'
                         'Check to set bound manually, '
@@ -720,15 +721,15 @@ class _ColormapBoundRow(_ColormapBaseRowMixIn, ProxyRow):
         return super(_ColormapBoundRow, self).setData(column, value, role)
 
 
-class ColormapRow(_ColormapBaseRowMixIn, StaticRow):
+class ColormapRow(StaticRow, _ColormapBaseRowMixIn):
     """Represents :class:`ColormapMixIn` property.
 
     :param Item3D item: Scene item with colormap property
     """
 
     def __init__(self, item):
-        _ColormapBaseRowMixIn.__init__(self, item)
         StaticRow.__init__(self, ('Colormap', None))
+        _ColormapBaseRowMixIn.__init__(self, item)
 
         self._colormapImage = None
 

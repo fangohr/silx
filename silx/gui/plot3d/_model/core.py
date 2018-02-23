@@ -49,7 +49,7 @@ class BaseRow(qt.QObject):
     """
 
     def __init__(self, children=()):
-        super(BaseRow, self).__init__()
+        qt.QObject.__init__(self)
         self.__children = []
         for row in children:
             assert isinstance(row, BaseRow)
@@ -222,7 +222,7 @@ class StaticRow(BaseRow):
     """
 
     def __init__(self, display=('', None), roles=None, children=()):
-        super(StaticRow, self).__init__(children)
+        BaseRow.__init__(self, children)
         self._dataByRoles = {} if roles is None else roles
         self._dataByRoles[qt.Qt.DisplayRole] = display
 
@@ -266,7 +266,7 @@ class ProxyRow(BaseRow):
                  fromModelData=None,
                  editorHint=None):
 
-        super(ProxyRow, self).__init__()
+        BaseRow.__init__(self)
         self.__name = name
         self.__editorHint = editorHint
 
